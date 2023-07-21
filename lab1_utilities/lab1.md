@@ -110,7 +110,10 @@ int main(){
   4. 连续的父子进程定义，用通道进行通信，注意单向通信
   5. 注意关闭管道端口，防止文件描述符资源不够用
 
-- [ ] `find`
+- [x] `find`
+
+  1. 重点是读 `user/ls.c` ，照猫画虎就差不多了
+  2. 理解两个结构体 `dirent,stat` ，理解如何读取文件，理解更改 `buf` 的指针操作 
 
 - [ ] `xargs`
 
@@ -129,5 +132,9 @@ make: 'kernel/kernel' is up to date.
     
 make: 'kernel/kernel' is up to date.
 == Test primes == primes: OK (0.9s)
+    
+make: 'kernel/kernel' is up to date.
+== Test find, in current directory == find, in current directory: OK (1.4s)
+== Test find, recursive == find, recursive: OK (1.1s)
 ```
 
