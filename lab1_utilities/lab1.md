@@ -94,21 +94,27 @@ int main(){
 
 # lab
 
-- [x] sleep
+- [x] `sleep`
 
   懂得怎么与 'shell' 交互即可，主要是搞懂 `main` 函数
 
-- [x] pingpong
+- [x] `pingpong`
 
   需要用到两个 pipe ，深入理解 pipe 的单向通信
 
-- [x] 
+- [x] `primes`
 
-- [x] 
+  1. 将 `2~35` 从小到大排序，第一个数2是素数，将2的倍数筛掉，留下的数（除了2）传入子进程
+  2. 子进程此时第一个数一定是素数，因为已经验证比其小的数都不是其因数
+  3. 每一轮都只用第一个数去筛，达到 pipeline 的效果
+  4. 连续的父子进程定义，用通道进行通信，注意单向通信
+  5. 注意关闭管道端口，防止文件描述符资源不够用
 
-- [x] 
+- [ ] `find`
 
-- [ ] 
+- [ ] `xargs`
+
+  
 
 通过测试，通过shell指令如 `./grade-lab-util sleep` 即可测试单个utility
 
@@ -120,5 +126,8 @@ make: 'kernel/kernel' is up to date.
     
 make: 'kernel/kernel' is up to date.
 == Test pingpong == pingpong: OK (0.9s)
+    
+make: 'kernel/kernel' is up to date.
+== Test primes == primes: OK (0.9s)
 ```
 
