@@ -1,4 +1,4 @@
-// printf("%s %d %d %l\n", fmtname(path), st.type, st.ino, st.size);
+// find . b  : find file named b in the directories below "."
 
 #include "kernel/types.h"
 #include "kernel/stat.h"
