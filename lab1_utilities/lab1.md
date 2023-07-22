@@ -8,8 +8,9 @@
 ## system calls
 
 <div align="center">
-<img src="../assets/image-20230718141737549.png" alt="system calls" width="600" />
+<img src="../assets/lab1_all_system_call.png" alt="system calls" width="600" />
 </div>
+
 
 其中较为重要的系统调用有`read, write, exit, open, fork, exec, wait`，以下是解释较难理解的系统调用
 
@@ -115,26 +116,16 @@ int main(){
   1. 重点是读 `user/ls.c` ，照猫画虎就差不多了
   2. 理解两个结构体 `dirent,stat` ，理解如何读取文件，理解更改 `buf` 的指针操作 
 
-- [ ] `xargs`
+- [x] `xargs`
 
+  1. 读一行执行一次，标准输入的返回值为0的时候表示读入完成，可跳出循环
+  2. 遇到最大的问题在于c语言的指针，当对一个指针 `p = 0;` 时，意味着设置空指针，标志参数读取结束
+  
   
 
-通过测试，通过shell指令如 `./grade-lab-util sleep` 即可测试单个utility
+通过shell指令如 `./grade-lab-util sleep` 即可测试单个utility， `make grade` 测试lab1得分
 
-```c
-make: 'kernel/kernel' is up to date.
-== Test sleep, no arguments == sleep, no arguments: OK (0.6s)
-== Test sleep, returns == sleep, returns: OK (0.9s)
-== Test sleep, makes syscall == sleep, makes syscall: OK (1.0s)
-    
-make: 'kernel/kernel' is up to date.
-== Test pingpong == pingpong: OK (0.9s)
-    
-make: 'kernel/kernel' is up to date.
-== Test primes == primes: OK (0.9s)
-    
-make: 'kernel/kernel' is up to date.
-== Test find, in current directory == find, in current directory: OK (1.4s)
-== Test find, recursive == find, recursive: OK (1.1s)
-```
+<div align="center">
+<img src="../assets/lab1_testreport.png" alt="score report" width="400" />
+</div>
 
