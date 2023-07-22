@@ -95,6 +95,10 @@ int main(){
 
 # lab
 
+- **summary**
+
+  lab1 主要集中于使用system call 进行编程，从代码上来说更大的难点在于回归c语言的使用，尤其是数组和指针。从system call 本身而言，`pipe, fork, exec` 的结合使用带来了更底层视角的编程体验
+
 - [x] `sleep`
 
   懂得怎么与 'shell' 交互即可，主要是搞懂 `main` 函数
@@ -128,4 +132,3 @@ int main(){
 <div align="center">
 <img src="../assets/lab1_testreport.png" alt="score report" width="400" />
 </div>
-
