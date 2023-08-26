@@ -1,5 +1,5 @@
 # OS xv6
 
-- [x] [lab1 utilities学习与说明文档](./doc/lab1.md):page_facing_up:     [lab1代码](https://github.com/maochiyu1111/OS-xv6/compare/util?expand=1):abc:
+- [x] :page_facing_up:[lab1 utilities学习与说明文档](./doc/lab1.md)   :abc: [lab1代码](https://github.com/maochiyu1111/OS-xv6/compare/util?expand=1)
 - [ ] lab2 system calls
 - [ ] lab3 page tables
