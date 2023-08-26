@@ -91,3 +91,13 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+uint64
+sys_trace(void){
+  int mask;
+
+  argint(0, &mask);  //获取mask值，即系统调用参数
+  myproc()->trace_mask = mask; 
+    return 0;
+  
+}
