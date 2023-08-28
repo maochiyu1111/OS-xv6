@@ -683,3 +683,17 @@ procdump(void)
     printf("\n");
   }
 }
+
+int not_UNUSED_proc(void)
+{
+  struct proc *p;
+  int nuproc = 0;
+
+  for(p = proc; p < &proc[NPROC]; p++) {
+    if(p->state != UNUSED) {
+      nuproc++;
+    }
+  }
+
+  return nuproc;
+}

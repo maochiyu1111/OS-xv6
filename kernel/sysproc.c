@@ -5,6 +5,7 @@
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "sysinfo.h"
 
 uint64
 sys_exit(void)
@@ -101,3 +102,26 @@ sys_trace(void){
     return 0;
   
 }
+
+uint64
+sys_sysinfo(void){
+  int nproc = not_UNUSED_proc();
+  int freemem = free_mem();
+
+  struct sysinfo sysinfo;
+  sysinfo.freemem = freemem;
+  sysinfo.nproc = nproc;
+
+  //pointer to the initial address of user space
+  uint64 init_addr;
+  argaddr(0, &init_addr);
+
+  //copy sysinfo from kernel to user space
+  struct proc *p = myproc();
+  if (copyout(p->pagetable, init_addr, (char *)&sysinfo, sizeof(sysinfo)) < 0)
+    return -1;
+
+  return 0;
+
+}
+
