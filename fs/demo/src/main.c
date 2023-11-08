@@ -18,9 +18,9 @@ struct demo_super
     int     sz_io;      /* 磁盘IO大小，单位B */
     int     sz_disk;    /* 磁盘容量大小，单位B */
     int     sz_blks;    /* 逻辑块大小，单位B */
-    int     max_blks;   /* 最多逻辑块数 */
 };
 
+/* 目录项 */
 struct demo_dentry
 {
     char    fname[128];
@@ -40,11 +40,10 @@ static int demo_mount(){
     printf("super.driver_fd: %d\n", super.driver_fd);
 
 
-    /* TODO: ioctl获取虚拟磁盘参数，并填充super信息 */
+    /* 填充super信息 */
     super.sz_io = /* TODO */;
     super.sz_disk = /* TODO */;
-    super.sz_blks = /* TODO */;
-    super.max_blks = /* TODO */;
+    super.sz_blks = /* TODO */; 
 
     return 0;
 }
@@ -58,8 +57,19 @@ static int demo_umount(){
 /* 遍历目录 */
 static int demo_readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info* fi)
 {
-    char filename[128];
-    /* TODO: 根据超级块的信息，从第500逻辑块读取一个dentry，ls将只固定显示这个文件名 */
+    char filename[128]; // 待填充的
+
+    /* 根据超级块的信息，从第500逻辑块读取一个dentry，ls将只固定显示这个文件名 */
+
+    /* TODO: 计算offset，并根据offset调用ddriver_seek移动磁盘头到offset处 */
+
+    /* TODO: 调用ddriver_read读出一个磁盘块到内存，512B */
+
+    /* TODO: 使用memcpy拷贝上述512B的前sizeof(demo_dentry)字节构建一个demo_dentry结构 */
+
+    /* TODO: 填充filename */
+
+    // 此处大家先不关注filler，已经帮同学写好，同学填充好filename即可
     return filler(buf, filename, NULL, 0);
 }
 
