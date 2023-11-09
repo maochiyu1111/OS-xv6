@@ -77,11 +77,11 @@ function generate_vscode () {
     # 修改tasks.json
     GENERATOR="make"
 
-    if command -v ninja > /dev/null 2>&1; then
-        GENERATOR="ninja"
-    else
-        GENERATOR="make"
-    fi
+    # if command -v ninja > /dev/null 2>&1; then
+    #     GENERATOR="ninja"
+    # else
+    #     GENERATOR="make"
+    # fi
     sed -i "s/GENERATOR/${GENERATOR}/g" "$WORKSPACE_NAME"/.vscode/tasks.json
 }
 
