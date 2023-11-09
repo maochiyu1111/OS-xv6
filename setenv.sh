@@ -94,8 +94,6 @@ Step 2. 打开CMakeLists.txt文件
 Step 3. ctrl + shift + p呼出命令菜单
 Step 4. 输入CMake: Configure
 Step 5. 查看Generator (已用!!!!!标记)
-        1) 若为Unix Makefiles，请手动修改.vscode/tasks.json的command为make
-        2) 若为Ninja，请手动修改.vscode/tasks.json的command为ninja
 Step 6. 到${WORKSPACE_NAME}/src/${PROJECT_NAME}.c目录，打断点
 Step 7. 按下F5进行调试
 二. 驱动使用说明: 
