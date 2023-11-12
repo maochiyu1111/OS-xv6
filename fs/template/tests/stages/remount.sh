@@ -39,7 +39,7 @@ function check_bm() {
     elif (( RET == LAYOUT_FILE_ERR )); then
         fail "$_TEST_CASE: .layout文件有误, 请结合报错信息自行检查"
     elif (( RET == GOLDEN_LAYOUT_MISMATCH )); then
-        fail "$_TEST_CASE: .layout文件与golden.json信息不一致, 请结合报错信息自行检查"
+        fail "$_TEST_CASE: .layout文件和本次实验布局不符, 请结合报错信息自行检查"
     fi
     return 1
 }
