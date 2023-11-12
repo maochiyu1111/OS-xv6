@@ -49,7 +49,7 @@ clean_ddriver
 
 try_mount_or_fail
 
-mkdir_and_check "${MNTPOINT}/hello"
+touch_and_check "${MNTPOINT}/hello"
 
 TEST_CASE="case 5.1 - umount ${MNTPOINT}"
 core_tester ls "${MNTPOINT}" check_umount "$TEST_CASE"
