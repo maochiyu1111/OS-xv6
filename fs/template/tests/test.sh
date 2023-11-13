@@ -13,6 +13,18 @@
 
 read -r -p "请输入测试方式[N(基础功能测试) / E(进阶功能测试) / S(分阶段测试)]: " TEST_METHOD
 
+# 编译src
+cd ..; mkdir build >/dev/null 2>&1; cd build
+
+cmake .. >/dev/null 2>&1; make >/dev/null 2>&1;
+if [ $? -eq 0 ]; then
+    echo "" >/dev/null
+else
+    echo "Test Fail : 编译失败"
+    exit 1
+fi
+cd ../tests
+
 rm mnt -rf
 mkdir mnt 2>/dev/null 
 
