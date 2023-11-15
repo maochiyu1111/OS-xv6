@@ -135,6 +135,8 @@ options:
     " >"$ROOT_DIR"/$FS_DIR/"$WORKSPACE_NAME"/SPEC.txt
     cat "$ROOT_DIR"/$FS_DIR/"$WORKSPACE_NAME"/SPEC.txt
     echo "上述说明已生成至" "$ROOT_DIR"/fs/"$WORKSPACE_NAME"/SPEC.txt
+
+    source ~/.bashrc
 }
 
 function build_workspace() {
