@@ -57,11 +57,13 @@ static int demo_umount(){
 /* 遍历目录 */
 static int demo_readdir(const char* path, void* buf, fuse_fill_dir_t filler, off_t offset, struct fuse_file_info* fi)
 {
+    // 此处任务一同学无需关注demo_readdir的传入参数，也不要使用到上述参数
+
     char filename[128]; // 待填充的
 
     /* 根据超级块的信息，从第500逻辑块读取一个dentry，ls将只固定显示这个文件名 */
 
-    /* TODO: 计算offset，并根据offset调用ddriver_seek移动磁盘头到offset处 */
+    /* TODO: 计算磁盘偏移off，并根据磁盘偏移off调用ddriver_seek移动磁盘头到磁盘偏移off处 */
 
     /* TODO: 调用ddriver_read读出一个磁盘块到内存，512B */
 
