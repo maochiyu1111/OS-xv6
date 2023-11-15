@@ -62,6 +62,7 @@ fi
 
 
 # 卸载文件系统
+sleep 1
 fusermount -u ./tests/test_mnt
 if [ $? -eq 0 ]; then
     echo "Test Pass!!!"
