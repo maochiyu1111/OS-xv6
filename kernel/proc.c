@@ -36,6 +36,7 @@ void procinit(void) {
     if (pa == 0) panic("kalloc");
     uint64 va = KSTACK((int)(p - proc));
     kvmmap(va, (uint64)pa, PGSIZE, PTE_R | PTE_W);
+    p->kstack_pa = (uint64)pa; // 将内核栈的物理地址拷贝到kstack_pa中
     p->kstack = va;
   }
   kvminithart();
@@ -117,7 +118,40 @@ found:
   p->context.ra = (uint64)forkret;
   p->context.sp = p->kstack + PGSIZE;
 
+  //设置内核页表，并将内核栈映射到页表中
+  p->k_pagetable = kvm_independent_init();
+
+  if(p->k_pagetable == 0){
+    freeproc(p);
+    release(&p->lock);
+    return 0;
+  }
+
+  // 映射内核栈
+  ikvmmap(p->k_pagetable, p->kstack, p->kstack_pa, PGSIZE, PTE_R | PTE_W);
+  
+
   return p;
+}
+
+
+void
+proc_free_kernel_pagetable(pagetable_t pagetable, int level)
+{
+  for(int i = 0; i < 512; i++){
+    pte_t pte = pagetable[i];
+
+    if((pte & PTE_V)){
+      pagetable[i] = 0;
+
+      if(level > 0){
+        uint64 child = PTE2PA(pte);
+        proc_free_kernel_pagetable((pagetable_t)child, level-1);
+      }
+    }
+  }
+
+  kfree((void*)pagetable);
 }
 
 // free a proc structure and the data hanging from it,
@@ -136,6 +170,18 @@ static void freeproc(struct proc *p) {
   p->killed = 0;
   p->xstate = 0;
   p->state = UNUSED;
+
+  // 将内核页表的前96项置零，避免重复回收
+  pagetable_t kpgtbl_sec = (pagetable_t) PTE2PA (p->k_pagetable[0]);
+  for (int i = 0; i < 96; i++) {
+    kpgtbl_sec[i] = 0;
+  }
+
+  //释放内核页表
+  if(p->k_pagetable)
+    proc_free_kernel_pagetable(p->k_pagetable, 2);
+
+  p->k_pagetable = 0;
 }
 
 // Create a user page table for a given process,
@@ -202,6 +248,8 @@ void userinit(void) {
 
   p->state = RUNNABLE;
 
+  sync_pagetable(p->pagetable, p->k_pagetable);
+
   release(&p->lock);
 }
 
@@ -213,13 +261,23 @@ int growproc(int n) {
 
   sz = p->sz;
   if (n > 0) {
+    // 地址重合问题
+    // if(sz + n > PLIC) {  
+    //   panic("用户地址空间增长越界");
+    //   return -1;
+    // } 
+
     if ((sz = uvmalloc(p->pagetable, sz, sz + n)) == 0) {
       return -1;
     }
+
   } else if (n < 0) {
     sz = uvmdealloc(p->pagetable, sz, sz + n);
   }
   p->sz = sz;
+
+  sync_pagetable(p->pagetable, p->k_pagetable);
+
   return 0;
 }
 
@@ -261,6 +319,9 @@ int fork(void) {
   pid = np->pid;
 
   np->state = RUNNABLE;
+
+  //给子进程np 同步内核页表
+  sync_pagetable(np->pagetable, np->k_pagetable);
 
   release(&np->lock);
 
@@ -429,15 +490,22 @@ void scheduler(void) {
         // to release its lock and then reacquire it
         // before jumping back to us.
         p->state = RUNNING;
-        c->proc = p;
+        c->proc = p; // 此处切换了进程
+
+        //切换内核页表
+        w_satp(MAKE_SATP(p->k_pagetable));
+        sfence_vma();
         swtch(&c->context, &p->context);
 
         // Process is done running for now.
         // It should have changed its p->state before coming back.
+
+        //载入全局的内核页表
+        kvminithart();
         c->proc = 0;
 
         found = 1;
-      }
+      } 
       release(&p->lock);
     }
 #if !defined(LAB_FS)

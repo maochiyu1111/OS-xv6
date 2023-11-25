@@ -40,6 +40,7 @@ w_mepc(uint64 x)
 
 // Supervisor Status Register, sstatus
 
+#define SSTATUS_SUM (1L << 18) //SSTATUS的SUM位，若为1则内核态可访问用户态的页表
 #define SSTATUS_SPP (1L << 8)  // Previous mode, 1=Supervisor, 0=User
 #define SSTATUS_SPIE (1L << 5) // Supervisor Previous Interrupt Enable
 #define SSTATUS_UPIE (1L << 4) // User Previous Interrupt Enable
@@ -344,6 +345,11 @@ sfence_vma()
 #define PTE_W (1L << 2)
 #define PTE_X (1L << 3)
 #define PTE_U (1L << 4) // 1 -> user can access
+
+#define CHECK_PTE_R(pte) ((pte & PTE_R) ? "r" : "-")
+#define CHECK_PTE_W(pte) ((pte & PTE_W) ? "w" : "-")
+#define CHECK_PTE_X(pte) ((pte & PTE_X) ? "x" : "-")
+#define CHECK_PTE_U(pte) ((pte & PTE_U) ? "u" : "-")
 
 // shift a physical address to the right place for a PTE.
 #define PA2PTE(pa) ((((uint64)pa) >> 12) << 10)

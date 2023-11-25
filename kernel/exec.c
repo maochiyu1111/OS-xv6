@@ -90,6 +90,7 @@ int exec(char *path, char **argv) {
   safestrcpy(p->name, last, sizeof(p->name));
 
   // Commit to the user image.
+  //释放原页表和原内存空间，并将新的页表和内存空间分配给用户进程。
   oldpagetable = p->pagetable;
   p->pagetable = pagetable;
   p->sz = sz;
@@ -97,6 +98,12 @@ int exec(char *path, char **argv) {
   p->trapframe->sp = sp;          // initial stack pointer
   proc_freepagetable(oldpagetable, oldsz);
 
+  //更新进程的内核页表中的用户页表映射
+  sync_pagetable(p->pagetable, p->k_pagetable);
+  
+  if(p->pid == 1) {
+    vmprint(p->pagetable);
+  }
   return argc;  // this ends up in a0, the first argument to main(argc, argv)
 
 bad:
