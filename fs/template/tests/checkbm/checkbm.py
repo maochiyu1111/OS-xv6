@@ -12,6 +12,7 @@ INODE_MAP_ERR = 1
 DATA_MAP_ERR = 2
 LAYOUT_FILE_ERR = 3
 GOLDEN_LAYOUT_MISMATCH = 4
+DATA_ERR = 5
 
 """ Messages """
 ERROR = "错误: "
@@ -20,7 +21,8 @@ ERROR = "错误: "
 SUPER = [ "super" ]
 INODE_MAP = [ "inode", "map" ]
 DATA_MAP = [ "data", "map" ]
-TOKENS_TOBE_CHECK = [SUPER, INODE_MAP, DATA_MAP]
+INODE = [ "inode" ]
+TOKENS_TOBE_CHECK = [SUPER, INODE_MAP, DATA_MAP, INODE]
 
 """ Path Resolution """
 root = os.path.split(os.path.realpath(__file__))[0]
@@ -66,12 +68,15 @@ with open(golden, "r") as f:
             _TOKENS_TOBE_CHECK.append(INODE_MAP)
         elif check_layout(layout, DATA_MAP):
             _TOKENS_TOBE_CHECK.append(DATA_MAP)
+        elif check_layout(layout, INODE):
+            _TOKENS_TOBE_CHECK.append(INODE)
     if len(_TOKENS_TOBE_CHECK) != 0:
         TOKENS_TOBE_CHECK = _TOKENS_TOBE_CHECK
 print("\n" + golden + " parsed results:")
 print("\tcheck layouts: [", end=" ")
 is_check_data_map = False
 is_check_inode_map = False
+is_check_data = False
 for token in TOKENS_TOBE_CHECK:
     if token == SUPER:
         print("super", end=" ")
@@ -81,6 +86,9 @@ for token in TOKENS_TOBE_CHECK:
     if token == INODE_MAP:
         print("inode_map", end=" ")
         is_check_inode_map = True
+    if token == INODE:
+        print("inode_map", end=" ")
+        is_check_data = True
 print("]")
 if is_check_inode_map:
     print("\tvalid_inode: " + str(valid_inode))
@@ -96,6 +104,8 @@ inode_map_ofs = 0
 inode_map_blks = 0 
 data_map_ofs = 0 
 data_map_blks = 0  
+inode_ofs = 0 
+inode_blks = 0 
 with open(fslayout, "r") as f:
     lines = f.readlines()
     layoutsln = ""
@@ -151,6 +161,9 @@ with open(fslayout, "r") as f:
             if TOKEN == DATA_MAP:
                 sys.stderr.write(ERROR + os.path.basename(golden) + "中要检查data map, 但" + os.path.basename(fslayout) + "中没有找到data map定义\n")
                 exit(GOLDEN_LAYOUT_MISMATCH)
+            if TOKEN == INODE:
+                sys.stderr.write(ERROR + os.path.basename(golden) + "中要检查inode区, 但" + os.path.basename(fslayout) + "中没有找到inode区定义\n")
+                exit(GOLDEN_LAYOUT_MISMATCH)
     """ parse layout info """
     for layout in layouts:
         layout = layout.strip(" ")
@@ -168,6 +181,10 @@ with open(fslayout, "r") as f:
                 data_map_ofs = cur_blks
                 data_map_blks = blks
                 parsed_layout += 1
+            elif check_layout(layout, INODE):
+                inode_ofs = cur_blks
+                inode_blks = blks
+                parsed_layout += 1
             cur_blks += blks
     print("\n" + fslayout + " parsed result:")
     print("\tblock_size: %d" % block_size)
@@ -179,6 +196,9 @@ with open(fslayout, "r") as f:
     if is_check_data_map:
         print("\tdata_map_ofs: %d" % data_map_ofs)
         print("\tdata_map_blks: %d" % data_map_blks)
+    if is_check_data:
+        print("\tinode_ofs: %d" % inode_ofs)
+        print("\tinode_blks: %d" % inode_blks)
 
 
 def check_map(f: TextIOWrapper, map_ofs: int, map_blks: int, golden_cnt: int):
@@ -189,6 +209,17 @@ def check_map(f: TextIOWrapper, map_ofs: int, map_blks: int, golden_cnt: int):
         val = int.from_bytes(bm[i * 4 : i * 4 + 4], byteorder='little', signed=False)
         valid_count += bin(val).count("1")
     return [ valid_count == golden_cnt, valid_count, golden_cnt]
+
+def check_data(f: TextIOWrapper, ino_ofs: int, ino_blks: int):
+    res = True
+    f.seek((ino_ofs + ino_blks) * block_size)
+    bm = f.read(1 * block_size)
+    valid_count = 0
+    if all(byte == 0 for byte in bm):
+        res = False
+    else:
+        res = True
+    return res
 
 with open(ddriver, "rb") as f:
     if is_check_inode_map:
@@ -201,6 +232,11 @@ with open(ddriver, "rb") as f:
         if not res2[0]:
             sys.stderr.write("数据位图错误, 期望值: %d个有效位, 实际值: %d个有效位" % (res2[2], res2[1]))
             exit(DATA_MAP_ERR)
+    if is_check_data:
+        res3 = check_data(f, inode_ofs, inode_blks)
+        if not res3:
+            sys.stderr.write("数据写回错误, 没有写回到指定的数据区中")
+            exit(DATA_ERR)
     exit(ERR_OK)
 
     

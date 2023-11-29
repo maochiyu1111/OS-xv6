@@ -23,6 +23,7 @@ INODE_MAP_ERR=1
 DATA_MAP_ERR=2
 LAYOUT_FILE_ERR=3
 GOLDEN_LAYOUT_MISMATCH=4
+DATA_ERR=5
 
 function check_bm() {
     _PARAM=$1
@@ -36,6 +37,8 @@ function check_bm() {
         fail "$_TEST_CASE: Inode位图错误, 请使用checkbm.py和ddriver工具自行检查. 注: 在命令行输入ddriver -d并且安装HexEditor插件即可查看当前ddriver介质情况"
     elif (( RET == DATA_MAP_ERR )); then
         fail "$_TEST_CASE: 数据位图错误, 请使用checkbm.py和ddriver工具自行检查. 注: 在命令行输入ddriver -d并且安装HexEditor插件即可查看当前ddriver介质情况"
+        elif (( RET == DATA_ERR )); then
+        fail "$_TEST_CASE: 数据写回错误, 请检查数据是否正确写回到数据区的指定位置"
     elif (( RET == LAYOUT_FILE_ERR )); then
         fail "$_TEST_CASE: .layout文件有误, 请结合报错信息自行检查"
     elif (( RET == GOLDEN_LAYOUT_MISMATCH )); then
