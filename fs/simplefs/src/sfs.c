@@ -1,3 +1,4 @@
+#define _XOPEN_SOURCE 700
 #include "../include/sfs.h"
 /******************************************************************************
 * SECTION: Macro
