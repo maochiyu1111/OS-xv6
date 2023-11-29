@@ -32,7 +32,7 @@ struct demo_super super;
 #define DEVICE_NAME "ddriver"
 
 /* 挂载文件系统 */
-static int demo_mount(){
+static int demo_mount(struct fuse_conn_info * conn_info){
     // 打开驱动
     char device_path[128] = {0};
     sprintf(device_path, "%s/" DEVICE_NAME, getpwuid(getuid())->pw_dir);
@@ -50,7 +50,7 @@ static int demo_mount(){
 }
 
 /* 卸载文件系统 */
-static int demo_umount(){
+static int demo_umount(void* p){
     // 关闭驱动
     ddriver_close(super.driver_fd);
 }
