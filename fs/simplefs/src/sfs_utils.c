@@ -337,6 +337,7 @@ int sfs_drop_inode(struct sfs_inode * inode) {
  * @return struct sfs_inode* 
  */
 struct sfs_inode* sfs_read_inode(struct sfs_dentry * dentry, int ino) {
+    printf("~ hello ~\n");
     struct sfs_inode* inode = (struct sfs_inode*)malloc(sizeof(struct sfs_inode));
     struct sfs_inode_d inode_d;
     struct sfs_dentry* sub_dentry;
@@ -532,7 +533,7 @@ int sfs_mount(struct custom_options options){
 
         inode_num  =  SFS_DISK_SZ() / ((SFS_DATA_PER_FILE + SFS_INODE_PER_FILE) * SFS_IO_SZ());
 
-        map_inode_blks = SFS_ROUND_UP(SFS_ROUND_UP(inode_num, UINT32_BITS), SFS_IO_SZ()) 
+        map_inode_blks = SFS_ROUND_UP((SFS_ROUND_UP(inode_num, UINT32_BITS) / UINT8_BITS), SFS_IO_SZ()) 
                          / SFS_IO_SZ();
         
                                                       /* 布局layout */
