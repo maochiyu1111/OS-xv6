@@ -6,6 +6,8 @@
         "ioctl.h": "c",
         "sfs.h": "c",
         "ddriver.h": "c",
-        "errno.h": "c"
+        "errno.h": "c",
+        "nfs.h": "c",
+        "types.h": "c"
     }
 }

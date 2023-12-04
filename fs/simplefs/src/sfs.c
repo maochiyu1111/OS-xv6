@@ -71,23 +71,33 @@ int sfs_mkdir(const char* path, mode_t mode) {
 	(void)mode;
 	boolean is_find, is_root;
 	char* fname;
+
+	// 找到父目录的dentry
 	struct sfs_dentry* last_dentry = sfs_lookup(path, &is_find, &is_root);
 	struct sfs_dentry* dentry;
 	struct sfs_inode*  inode;
 
+	// 如果有重名，报错
 	if (is_find) {
 		return -SFS_ERROR_EXISTS;
 	}
 
+	//如果父目录是一个普通文件，报错
 	if (SFS_IS_REG(last_dentry->inode)) {
 		return -SFS_ERROR_UNSUPPORTED;
 	}
+
 
 	fname  = sfs_get_fname(path);
 	dentry = new_dentry(fname, SFS_DIR); 
 	dentry->parent = last_dentry;
 	inode  = sfs_alloc_inode(dentry);
+
+	// 头插法新增entry
 	sfs_alloc_dentry(last_dentry->inode, dentry);
+
+	// 我们可能还需要为新增的dentry预先申请一个新的父目录的数据块来供对应的
+	// dentry_d写回磁盘时使用（如果父目录原来申请的数据块已经放满了）
 	
 	return SFS_ERROR_NONE;
 }

@@ -37,6 +37,9 @@ int sfs_calc_lvl(const char * path) {
     }
     return lvl;
 }
+
+// 磁盘交互的封装，方便读写任意长度的数据
+
 /**
  * @brief 驱动读
  * 
@@ -46,13 +49,15 @@ int sfs_calc_lvl(const char * path) {
  * @return int 
  */
 int sfs_driver_read(int offset, uint8_t *out_content, int size) {
-    int      offset_aligned = SFS_ROUND_DOWN(offset, SFS_IO_SZ());
-    int      bias           = offset - offset_aligned;
-    int      size_aligned   = SFS_ROUND_UP((size + bias), SFS_IO_SZ());
-    uint8_t* temp_content   = (uint8_t*)malloc(size_aligned);
+    int      offset_aligned = SFS_ROUND_DOWN(offset, SFS_IO_SZ());  //下限对齐
+    int      bias           = offset - offset_aligned;    //下限多出来的那部分
+    int      size_aligned   = SFS_ROUND_UP((size + bias), SFS_IO_SZ());   // 上限对齐
+    uint8_t* temp_content   = (uint8_t*)malloc(size_aligned);      // 上限地址那么多空间
     uint8_t* cur            = temp_content;
     // lseek(SFS_DRIVER(), offset_aligned, SEEK_SET);
     ddriver_seek(SFS_DRIVER(), offset_aligned, SEEK_SET);
+
+    // 这里的判断函数不是很精准，可能读多了很多，但是能确保读对
     while (size_aligned != 0)
     {
         // read(SFS_DRIVER(), cur, SFS_IO_SZ());
@@ -78,8 +83,14 @@ int sfs_driver_write(int offset, uint8_t *in_content, int size) {
     int      size_aligned   = SFS_ROUND_UP((size + bias), SFS_IO_SZ());
     uint8_t* temp_content   = (uint8_t*)malloc(size_aligned);
     uint8_t* cur            = temp_content;
+
+    // 把上下对齐的空间内的内容读到temp中
     sfs_driver_read(offset_aligned, temp_content, size_aligned);
+
+    // 把要写入的内容拷贝在temp + bias上，也就是说，不改变bias以前的值，只改变bias以后的值
     memcpy(temp_content + bias, in_content, size);
+
+    // 这个时候，temp中的值直接全部写回就是正确的了
     
     // lseek(SFS_DRIVER(), offset_aligned, SEEK_SET);
     ddriver_seek(SFS_DRIVER(), offset_aligned, SEEK_SET);
@@ -494,6 +505,10 @@ struct sfs_dentry* sfs_lookup(const char * path, boolean* is_find, boolean* is_r
  * @param options 
  * @return int 
  */
+
+
+// 挂载函数
+
 int sfs_mount(struct custom_options options){
     int                 ret = SFS_ERROR_NONE;
     int                 driver_fd;
@@ -512,6 +527,7 @@ int sfs_mount(struct custom_options options){
     // driver_fd = open(options.device, O_RDWR);
     driver_fd = ddriver_open(options.device);
 
+    //如果打不开，返回报错
     if (driver_fd < 0) {
         return driver_fd;
     }
@@ -520,13 +536,18 @@ int sfs_mount(struct custom_options options){
     ddriver_ioctl(SFS_DRIVER(), IOC_REQ_DEVICE_SIZE,  &sfs_super.sz_disk);
     ddriver_ioctl(SFS_DRIVER(), IOC_REQ_DEVICE_IO_SZ, &sfs_super.sz_io);
     
+    //初始化根目录
     root_dentry = new_dentry("/", SFS_DIR);
 
+    // 从磁盘中读出来超级块
     if (sfs_driver_read(SFS_SUPER_OFS, (uint8_t *)(&sfs_super_d), 
                         sizeof(struct sfs_super_d)) != SFS_ERROR_NONE) {
         return -SFS_ERROR_IO;
     }   
-                                                      /* 读取super */
+     
+    // 判断是否是第一次加载，方法是 判断是否存在约定的幻数magic_number
+    // 如果此前没有挂载过，就要重新估算布局信息
+                                                     /* 读取super */
     if (sfs_super_d.magic_num != SFS_MAGIC_NUM) {     /* 幻数无 */
                                                       /* 估算各部分大小 */
         super_blks = SFS_ROUND_UP(sizeof(struct sfs_super_d), SFS_IO_SZ()) / SFS_IO_SZ();
@@ -545,6 +566,8 @@ int sfs_mount(struct custom_options options){
         SFS_DBG("inode map blocks: %d\n", map_inode_blks);
         is_init = TRUE;
     }
+
+    // 不管是否重新布局，都要从to-disk 构建 in-mem，此处在给索引节点赋值，nfs还需要加上数据位图
     sfs_super.sz_usage   = sfs_super_d.sz_usage;      /* 建立 in-memory 结构 */
     
     sfs_super.map_inode = (uint8_t *)malloc(SFS_BLKS_SZ(sfs_super_d.map_inode_blks));
@@ -552,16 +575,19 @@ int sfs_mount(struct custom_options options){
     sfs_super.map_inode_offset = sfs_super_d.map_inode_offset;
     sfs_super.data_offset = sfs_super_d.data_offset;
 
+    // 读取索引结点，检验是否能读到，读不到报错。如果是nfs还需要读数据位图
     if (sfs_driver_read(sfs_super_d.map_inode_offset, (uint8_t *)(sfs_super.map_inode), 
                         SFS_BLKS_SZ(sfs_super_d.map_inode_blks)) != SFS_ERROR_NONE) {
         return -SFS_ERROR_IO;
     }
 
+    // 如果是第一次挂载才重新创建根目录
     if (is_init) {                                    /* 分配根节点 */
         root_inode = sfs_alloc_inode(root_dentry);
         sfs_sync_inode(root_inode);
     }
     
+    // 读取根目录，生成层级
     root_inode            = sfs_read_inode(root_dentry, SFS_ROOT_INO);
     root_dentry->inode    = root_inode;
     sfs_super.root_dentry = root_dentry;
@@ -595,11 +621,14 @@ int sfs_umount() {
         return -SFS_ERROR_IO;
     }
 
+    //在nfs中还要加上数据位图
     if (sfs_driver_write(sfs_super_d.map_inode_offset, (uint8_t *)(sfs_super.map_inode), 
                          SFS_BLKS_SZ(sfs_super_d.map_inode_blks)) != SFS_ERROR_NONE) {
         return -SFS_ERROR_IO;
     }
 
+    // 在nfs中还要加以 层次关系 组织起来的文件，
+    // 包括 索引节点 struct inode_d、目录项struct dentry_d、文件数据 data三种内容的写回
     free(sfs_super.map_inode);
     ddriver_close(SFS_DRIVER());
 

@@ -4,6 +4,8 @@
         "*.wxss": "css",
         "*.wxs": "javascript",
         "ddriver.h": "c",
-        "fs.h": "c"
+        "fs.h": "c",
+        "ddriver_ctl_user.h": "c",
+        "fuse.h": "c"
     }
 }
