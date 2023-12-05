@@ -123,7 +123,7 @@ int nfs_alloc_dentry(struct nfs_inode *inode, struct nfs_dentry *dentry)
       inode->dentrys = dentry;
    }
    inode->dir_cnt++;
-   // 插入是size增加
+   // 插入时size增加
    inode->size += sizeof(struct nfs_dentry);
    return inode->dir_cnt;
 }
@@ -190,7 +190,7 @@ struct nfs_inode *nfs_alloc_inode(struct nfs_dentry *dentry)
             /* 当前ino_cursor位置空闲 */
             nfs_super.map_inode[byte_cursor] |= (0x1 << bit_cursor);
             is_find_free_entry = TRUE;
-            printf("--------------------------------ino_cursor = %d -----------------------\n", ino_cursor);
+            // printf("--------------------------------ino_cursor = %d -----------------------\n", ino_cursor);
             break;
          }
          ino_cursor++;

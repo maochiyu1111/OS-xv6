@@ -114,18 +114,20 @@ int nfs_mkdir(const char* path, mode_t mode) {
 	if(nfs_alloc_datablk(dentry) < 0)
 		printf("新增数据块失败");
 
-	// 头插法新增dentry
-	nfs_alloc_dentry(last_dentry->inode, dentry);
-
 	// 我们可能还需要为新增的dentry预先申请一个新的父目录的数据块来供对应的
 	// dentry_d写回磁盘时使用（如果父目录原来申请的数据块已经放满了）
-	int size_aligned_before = NFS_ROUND_UP((last_dentry->inode->size), NFS_BLK_SZ());
-	int size_aligned_after = NFS_ROUND_UP((last_dentry->inode->size + sizeof(struct nfs_dentry)), NFS_BLK_SZ());
+	int size_aligned_before = NFS_ROUND_DOWN((last_dentry->inode->size), NFS_BLK_SZ());
+	int size_aligned_after = NFS_ROUND_DOWN((last_dentry->inode->size + sizeof(struct nfs_dentry_d)), NFS_BLK_SZ());
 	if(size_aligned_after != size_aligned_before) {
 		// 需要给父目录增加新的数据块
 		if(nfs_alloc_datablk(last_dentry) < 0)
 			printf("父目录新增数据块失败");
 	}
+
+	// 头插法新增dentry
+	nfs_alloc_dentry(last_dentry->inode, dentry);
+
+
 
 	return NFS_ERROR_NONE;
 }
@@ -187,7 +189,7 @@ int nfs_getattr(const char* path, struct stat * nfs_stat) {
  * stbuf: 文件状态，可忽略
  * off: 下一次offset从哪里开始，这里可以理解为第几个dentry
  * 
- * @param offset 第几个目录项？
+ * @param offset 第几个目录项
  * @param fi 可忽略
  * @return int 0成功，否则失败
  */
@@ -254,16 +256,17 @@ int nfs_mknod(const char* path, mode_t mode, dev_t dev) {
 	// if(nfs_alloc_datablk(dentry) < 0)
 	// 	printf("新增数据块失败");
 
-	nfs_alloc_dentry(last_dentry->inode, dentry);
-
 	// 我们可能还需要为新增的dentry预先申请一个新的父目录的数据块
-	int size_aligned_before = NFS_ROUND_UP((last_dentry->inode->size), NFS_BLK_SZ());
-	int size_aligned_after = NFS_ROUND_UP((last_dentry->inode->size + sizeof(struct nfs_dentry)), NFS_BLK_SZ());
+	int size_aligned_before = NFS_ROUND_DOWN((last_dentry->inode->size), NFS_BLK_SZ());
+	int size_aligned_after = NFS_ROUND_DOWN((last_dentry->inode->size + sizeof(struct nfs_dentry_d)), NFS_BLK_SZ());
 	if(size_aligned_after != size_aligned_before) {
 		// 需要给父目录增加新的数据块
 		if(nfs_alloc_datablk(last_dentry) < 0)
 			printf("父目录新增数据块失败");
 	}
+
+	nfs_alloc_dentry(last_dentry->inode, dentry);
+
 	return NFS_ERROR_NONE;
 }
 
