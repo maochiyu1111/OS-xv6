@@ -61,7 +61,7 @@ RISC-V硬件对所有`trap`类型（除了定时器中断）执行以下步骤�
 
 <div align="center">
 	<img src="../assets/lab4_syscall.png" alt="img" width = 500; />
-<dic/>
+</dic>
 
 
 
@@ -169,4 +169,4 @@ RISC-V硬件对所有`trap`类型（除了定时器中断）执行以下步骤�
 
 <div align="center">
 	<img src="../assets/lab4_testreport.png" alt="score report" width="500" />
-<dic/>
+</dic>
