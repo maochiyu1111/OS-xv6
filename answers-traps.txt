@@ -1,0 +1,44 @@
+1. Which registers contain arguments to functions? For example, which register holds 13 in main's call to printf?
+
+   RISC-V提供了8个寄存器用于传参，为a0 - a7，在main调用printf时，13保存在寄存器a2中
+   "  printf("%d %d\n", f(8)+1, 13);
+      24:	4635                 li	a2,13"
+
+
+2. Where is the call to function f in the assembly code for main? Where is the call to g? (Hint: the compiler may inline functions.)
+
+   没有对f和g函数调用的代码，g函数被内联到f函数中，f函数被内联到main函数中。可以看到main中直接把f(8) + 1的值传递给了a1寄存器，没有对f函数进行调用。
+   "  26:	45b1                	li	a1,12"
+
+
+3. At what address is the function printf located?
+
+   0x628，由以下两句asm可算出ret地址，有可看出是32bit，故630(hex)-32bit = 628(hex)
+   "  3a:	00000097          	auipc	ra,0x0
+      3e:	276080e7          	jalr	630(ra) # 2b0 <exit>"
+
+
+4. What value is in the register ra just after the jalr to printf in main?
+
+   0x38，jalr会将下一条指令的地址保存到寄存器ra
+   "  34:	5f8080e7          	jalr	1528(ra) # 628 <printf>
+      exit(0);
+      38:	4501                	li	a0,0"
+
+
+5. Run the following code.
+      unsigned int i = 0x00646c72;
+      printf("H%x Wo%s", 57616, &i);
+   What is the output? Here's an ASCII table that maps bytes to characters.
+   The output depends on that fact that the RISC-V is little-endian. 
+   If the RISC-V were instead big-endian what would you set i to in order to yield the same output? Would you need to change 57616 to a different value?
+
+   输出：He110 World，如果改成大端模式，则i = 0x726c6400
+
+
+
+6. In the following code, what is going to be printed after 'y='? (note: the answer is not a specific value.) Why does this happen?
+      printf("x=%d y=%d", 3);
+
+   输出的是一个受调用前代码影响的随机值。printf在读取第三个参数对应的寄存器a2时，会读到随机数，即会输出a2寄存器的值，但a2寄存器的值是不确定的。
+

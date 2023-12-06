@@ -132,3 +132,18 @@ printfinit(void)
   initlock(&pr.lock, "pr");
   pr.locking = 1;
 }
+
+void
+backtrace(void)
+{
+  uint64 fp = r_fp();
+
+  // 由于栈高位为新调用的，低位为旧的，因此一路向栈底找
+
+  // 如果已经到达栈底，则停止
+  while(fp != PGROUNDDOWN(fp)) { 
+    uint64 ra = *(uint64*)(fp - 8); // 返回地址
+    printf("%p\n", ra);
+    fp = *(uint64*)(fp - 16); // 找到上一个fp
+  }
+}
