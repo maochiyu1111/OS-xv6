@@ -65,7 +65,22 @@ usertrap(void)
     intr_on();
 
     syscall();
-  } else if((which_dev = devintr()) != 0){
+  } else if(r_scause() == 13 || r_scause() == 15){
+    // 发生页错误异常，需要读或写未分配的内存
+    uint64 va = r_stval();
+
+    // 如果虚拟内存地址高于使用sbrk分配的任何虚拟地址，则终止该进程
+    if(va >= p->sz)
+      p->killed = 1;
+
+    // 如果是保护页上的错误，那么应该终止进程
+    // guard page在栈下面，栈只有一页的大小，PGROUNDDOWN(p->trapframe->sp)就是栈底
+    else if(va < PGROUNDDOWN(p->trapframe->sp))
+      p->killed = 1;
+      
+    else uvmlazyalloc(p, va);
+  }
+    else if((which_dev = devintr()) != 0){
     // ok
   } else {
     printf("usertrap(): unexpected scause %p pid=%d\n", r_scause(), p->pid);

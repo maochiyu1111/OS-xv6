@@ -47,8 +47,13 @@ sys_sbrk(void)
   if(argint(0, &n) < 0)
     return -1;
   addr = myproc()->sz;
-  if(growproc(n) < 0)
-    return -1;
+  // 如果n<0，用uvmdealloc释放空间
+  if(n < 0) {
+    uvmdealloc(myproc()->pagetable, myproc()->sz, myproc()->sz + n);
+  } 
+  // 懒分配
+  myproc()->sz = myproc()->sz + n;
+  
   return addr;
 }
 
