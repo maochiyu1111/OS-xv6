@@ -1,0 +1,3 @@
+简单来说，就是两个线程向同一个桶中插入数据的时候，执行insert(key, value, &table[i], table[i])时
+指针table[i]所指向的entry是同一个，也就导致了先插入桶的key被后插入的覆盖掉了，引发键值丢失
+
